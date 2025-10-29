@@ -1,4 +1,4 @@
-let users = {
+export let users = {
   '1': {
     id: '1',
     name: 'Alice Johnson',
@@ -15,7 +15,7 @@ let users = {
   }
 };
 
-let transactions = {
+export let transactions = {
   '1': {
     id: '1',
     userId: '1',                    // Foreign key to users
@@ -23,7 +23,6 @@ let transactions = {
     amount: 500.00,
     description: 'Monthly salary',
     category: 'income',             // For deposits: 'income', 'refund', etc.
-    date: '2024-10-01',
     createdAt: new Date('2024-10-01T09:00:00Z')
   },
   '2': {
@@ -33,7 +32,6 @@ let transactions = {
     amount: 50.00,
     description: 'Groceries',
     category: 'food',               // For withdrawals: 'food', 'transport', etc.
-    date: '2024-10-15',
     createdAt: new Date('2024-10-15T14:30:00Z')
   },
   '3': {
@@ -43,7 +41,6 @@ let transactions = {
     amount: 1000.00,
     description: 'Freelance payment',
     category: 'income',
-    date: '2024-10-20',
     createdAt: new Date('2024-10-20T11:00:00Z')
   }
 };
