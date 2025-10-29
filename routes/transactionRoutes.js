@@ -1,16 +1,16 @@
 import express from 'express';
+import { users, transactions} from '../data/storage';
 const router = express.Router();
 
-const transactions = [];
-// type: 'deposit',                
-//     amount: 500.00,
-//     description: 'Monthly salary',
-//     category: 'income',
+function getNewId(dataObject) {
+    // Get all current numeric keys, convert to numbers, find max, and add 1
+    const keys = Object.keys(dataObject);
+    const maxId = keys.length > 0 ? Math.max(...keys.map(Number)) : 0;
+    return String(maxId + 1);
+}
 
 router.get('/', (req, res) => {
     const { userId, type, description, category } = req.query;
-
-    let resultsTransactions = Object.values(transactions);
     
     if (!userId) {
         return res.status(400).json({
@@ -19,25 +19,26 @@ router.get('/', (req, res) => {
         })
     };
 
-    resultsTransactions = resultsTransactions.filter(resultsTransactions => resultsTransactions.userId === userId);
-
-    if (resultsTransactions.length === 0) {
+    if (!users[userId]) {
         return res.status(404).json({
             status: 404,
-            message: `No results found. Either user with user id ${userId} does not exist or no transactions made yet by the user.`
+            message: `User with id ${userId} not found.`
         })
     };
 
+    let resultsTransactions = Object.values(transactions)
+        .filter(tx => tx.userId === userId);
+
     if (type) {
-        resultsTransactions = resultsTransactions.filter(resultsTransactions => resultsTransactions.type === type);
+        resultsTransactions = resultsTransactions.filter(tx => tx.type === type);
     };
 
     if (description) {
-        resultsTransactions = resultsTransactions.filter(resultsTransactions => resultsTransactions.description === description);
+        resultsTransactions = resultsTransactions.filter(tx => tx.description === description);
     };
 
     if (category) {
-        resultsTransactions = resultsTransactions.filter(resultsTransactions => resultsTransactions.category === category);
+        resultsTransactions = resultsTransactions.filter(tx => tx.category === category);
     };
 
     if (resultsTransactions.length === 0) {
@@ -46,6 +47,8 @@ router.get('/', (req, res) => {
             message: 'No results found with the provided filters'
         })
     }
+
+    resultsTransactions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     return res.status(200).json({
         status: 200,
@@ -57,9 +60,6 @@ router.get('/', (req, res) => {
 router.post('/', (req, res) => {
     const { userId, type, amount, description, category } = req.body;
 
-    let resultsUsers = Object.values(users);
-    let resultsTransactions = Object.values(transactions);
-
     if (!userId || !type || !amount || !description || !category) {
         return res.status(400).json({
             status: 400,
@@ -67,33 +67,66 @@ router.post('/', (req, res) => {
         })
     };
 
-    resultsUsers = resultsUsers.filter(resultsUsers => resultsUsers.userId === userId);
+    const transactionAmount = Number(amount);
+    if (isNaN(transactionAmount) || transactionAmount <= 0) {
+        return res.status(400).json({
+            status: 400,
+            message: "Amount must be a positive number."
+        });
+    }
 
-    if (resultsUsers.length === 0) {
+    const user = users[userId];
+    if (!user) {
         return res.status(404).json({
             status: 404,
-            message: `No user found with id ${userId}.`
-        })
+            message: `User with id ${userId} not found.`
+        });
     };
 
-    newId = resultsTransactions.length + 1;
+    // 3. Validate transaction type
+    if (type !== 'deposit' && type !== 'withdrawal') {
+        return res.status(400).json({
+            status: 400,
+            message: "Transaction type must be 'deposit' or 'withdrawal'."
+        });
+    }
+
+    // 4. Balance Check for Withdrawal
+    if (type === 'withdrawal' && user.balance < transactionAmount) {
+        // Business logic error
+        return res.status(400).json({
+            status: 400,
+            message: "Insufficient funds for this withdrawal."
+        });
+    }
+
+    const newId = getNewId(transactions);
 
     const newTransaction = {
         id: newId,
-        userId: req.body.userId,
-        type: req.body.type, 
-        amount: req.body.amount,
-        description: req.body.description,
-        category: req.body.category,             
-        createdAt: Date.now()
+        userId: userId,
+        type: type, 
+        amount: amount,
+        description: description,
+        category: category,             
+        createdAt: new Date().toISOString()
     };
 
-    resultsUsers.push(newTransaction);
+    transactions[newId] = newTransaction;
+
+    if (type === 'deposit') {
+        user.balance += transactionAmount;
+    } else if (type === 'withdrawal') {
+        user.balance -= transactionAmount;
+    };
 
     return res.status(201).json({
         status: 201,
         message: "Transaction created successfully",
-        data: newTransaction
+        data: newTransaction,
+        newBalance: user.balance
     })
 
 });
+
+export default router;
