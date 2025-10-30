@@ -22,7 +22,7 @@ A RESTful API built with Node.js and Express.js for managing personal finance tr
 - Development Tools: nodemon
 
 # Project Structure
-personal-finance-tracker/
+finance-tracker-api/
 ├── data/
 │   └── storage.js          # In-memory data storage & business logic
 ├── middleware/
