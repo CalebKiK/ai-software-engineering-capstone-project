@@ -1,23 +1,43 @@
 import express from 'express';
 import { users, transactions} from '../data/storage';
+import { validateTransactionPost, validateTransactionGet } from '../validators/transactionValidators.js';
+import { getNewId } from '../utils/idGenerator';
+
 const router = express.Router();
 
-function getNewId(dataObject) {
-    // Get all current numeric keys, convert to numbers, find max, and add 1
-    const keys = Object.keys(dataObject);
-    const maxId = keys.length > 0 ? Math.max(...keys.map(Number)) : 0;
-    return String(maxId + 1);
-}
+// -----------------------------------------------------------
+// GET /transactions/balance - Get current user balance (Uses Query Validation)
+// -----------------------------------------------------------
+router.get('/balance', validateTransactionGet, (req, res) => {
+    // NOTE: userId presence is guaranteed by validateTransactionGet middleware
+    const { userId } = req.query;
 
-router.get('/', (req, res) => {
+    const user = users[userId];
+    if (!user) {
+        // This check remains because it is business logic (user data integrity), not just input syntax validation
+        return res.status(404).json({
+            status: 404,
+            message: `User with id ${userId} not found.`
+        });
+    }
+
+    // Return the pre-calculated balance
+    return res.status(200).json({
+        status: 200,
+        message: 'Current balance fetched successfully.',
+        data: {
+            userId: user.id,
+            balance: user.balance
+        }
+    });
+});
+
+// -----------------------------------------------------------
+// GET /transactions - Transaction History Endpoint (Uses Query Validation)
+// -----------------------------------------------------------
+router.get('/', validateTransactionGet, (req, res) => {
+    // NOTE: userId presence is guaranteed by validateTransactionGet middleware
     const { userId, type, description, category } = req.query;
-    
-    if (!userId) {
-        return res.status(400).json({
-            status: 400,
-            message: "UserId is required to find transactions"
-        })
-    };
 
     if (!users[userId]) {
         return res.status(404).json({
@@ -34,7 +54,8 @@ router.get('/', (req, res) => {
     };
 
     if (description) {
-        resultsTransactions = resultsTransactions.filter(tx => tx.description === description);
+        // Using includes for partial matching
+        resultsTransactions = resultsTransactions.filter(tx => tx.description.toLowerCase().includes(description.toLowerCase()));
     };
 
     if (category) {
@@ -42,9 +63,11 @@ router.get('/', (req, res) => {
     };
 
     if (resultsTransactions.length === 0) {
-        return res.status(404).json({
-            status: 404,
-            message: 'No results found with the provided filters'
+        // Using 200 OK since the request was valid, but no data matched the filter
+        return res.status(200).json({
+            status: 200,
+            message: 'No results found with the provided filters',
+            data: []
         })
     }
 
@@ -57,23 +80,13 @@ router.get('/', (req, res) => {
     })
 });
 
-router.post('/', (req, res) => {
+// -----------------------------------------------------------
+// POST /transactions - Create a new deposit or withdrawal (Uses Body Validation)
+// -----------------------------------------------------------
+router.post('/', validateTransactionPost, (req, res) => {
+    // NOTE: Input data structure, types, and required fields are guaranteed by validateTransactionPost middleware
     const { userId, type, amount, description, category } = req.body;
-
-    if (!userId || !type || !amount || !description || !category) {
-        return res.status(400).json({
-            status: 400,
-            message: "All fields are required to create a new transaction"
-        })
-    };
-
-    const transactionAmount = Number(amount);
-    if (isNaN(transactionAmount) || transactionAmount <= 0) {
-        return res.status(400).json({
-            status: 400,
-            message: "Amount must be a positive number."
-        });
-    }
+    const transactionAmount = Number(amount); // Conversion is safe here due to middleware check
 
     const user = users[userId];
     if (!user) {
@@ -83,17 +96,8 @@ router.post('/', (req, res) => {
         });
     };
 
-    // 3. Validate transaction type
-    if (type !== 'deposit' && type !== 'withdrawal') {
-        return res.status(400).json({
-            status: 400,
-            message: "Transaction type must be 'deposit' or 'withdrawal'."
-        });
-    }
-
-    // 4. Balance Check for Withdrawal
+    // Balance Check for Withdrawal (BUSINESS LOGIC REMAINS HERE)
     if (type === 'withdrawal' && user.balance < transactionAmount) {
-        // Business logic error
         return res.status(400).json({
             status: 400,
             message: "Insufficient funds for this withdrawal."
@@ -106,14 +110,15 @@ router.post('/', (req, res) => {
         id: newId,
         userId: userId,
         type: type, 
-        amount: amount,
+        amount: transactionAmount, // Use the converted number
         description: description,
-        category: category,             
+        category: category,
         createdAt: new Date().toISOString()
     };
 
     transactions[newId] = newTransaction;
 
+    // Update user balance
     if (type === 'deposit') {
         user.balance += transactionAmount;
     } else if (type === 'withdrawal') {
@@ -126,7 +131,72 @@ router.post('/', (req, res) => {
         data: newTransaction,
         newBalance: user.balance
     })
+});
 
+// -----------------------------------------------------------
+// DELETE /transactions/:id - Delete transaction and reverse balance
+// -----------------------------------------------------------
+router.delete('/:id', (req, res) => {
+    const { id } = req.params;
+
+    // 1. Check if transaction exists (O(1) lookup)
+    const transaction = transactions[id];
+    if (!transaction) {
+        return res.status(404).json({
+            status: 404,
+            message: `Transaction with id ${id} not found.`
+        });
+    }
+    
+    // 2. Check if user exists (safe check)
+    const user = users[transaction.userId];
+    if (!user) {
+        return res.status(500).json({ 
+            status: 500,
+            message: "Associated user not found, cannot safely delete transaction."
+        });
+    }
+
+    const { type, amount } = transaction;
+
+    // 3. Reverse the balance change
+    if (type === 'deposit') {
+        user.balance -= amount;
+    } else if (type === 'withdrawal') {
+        user.balance += amount;
+    }
+
+    // 4. Delete from data store
+    delete transactions[id];
+
+    // 5. Success Response
+    return res.status(200).json({
+        status: 200,
+        message: `Transaction ${id} deleted and balance reversed successfully.`,
+        newBalance: user.balance
+    });
+});
+
+
+// -----------------------------------------------------------
+// GET /transactions/:id - Get single transaction
+// -----------------------------------------------------------
+router.get('/:id', (req, res) => {
+    const { id } = req.params;
+    const transaction = transactions[id];
+
+    if (!transaction) {
+        return res.status(404).json({
+            status: 404,
+            message: `Transaction with id ${id} not found.`
+        });
+    }
+
+    return res.status(200).json({
+        status: 200,
+        message: 'Transaction found successfully.',
+        data: transaction
+    });
 });
 
 export default router;
