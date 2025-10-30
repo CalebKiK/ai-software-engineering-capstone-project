@@ -25,11 +25,17 @@ A RESTful API built with Node.js and Express.js for managing personal finance tr
 personal-finance-tracker/
 ├── data/
 │   └── storage.js          # In-memory data storage & business logic
+├── middleware/
+│   └── errorHandler.js     # Custom error middleware
+├── node_modules/           # Contains project dependencies
 ├── routes/
 │   ├── userRoutes.js       # User CRUD endpoints
 │   └── transactionRoutes.js # Transaction CRUD endpoints
 ├── utils/
-│   └── errors.js           # Custom error classes
+│   └── idGenerator.js           # Custom id generator utility
+├── validators/
+│   └── transactionValidators.js      # transactions logic validators
+│   └── userValidators.js      # users logic validators
 ├── server.js               # Main application entry point
 ├── package.json            # Project dependencies & scripts
 ├── .gitignore             # Git ignore file
@@ -59,46 +65,45 @@ personal-finance-tracker/
     `npm list`
 
 - Expected dependencies:
+    `express`
+    `nodemon (dev dependency)`
 
-express
-nodemon (dev dependency)
+3. Running the Application
+- Development mode (with auto-restart on file changes):
+    `npm run dev`
+- Production mode:
+    `npm start`
 
-Running the Application
-Development mode (with auto-restart on file changes):
-npm run dev
-Production mode:
-npm start
-The server will start on http://localhost:3000
-Verify the server is running:
-curl http://localhost:3000/health
-Expected response:
-json{
-  "status": "OK",
-  "timestamp": "2024-10-29T10:30:00.000Z"
-}
-```
 
----
+- The server will start on http://localhost:3000. Expected response to verify the server is running:
+    json{
+        message: 'Finance Tracker API is running',
+        version: '1.0.0'
+    }
 
-## 📖 API Documentation
+# API Documentation
 
 ### Base URL
-```
-http://localhost:3000/api
-Response Format
+- http://localhost:3000/api
+
+# Response Format
 All API responses follow this structure:
-Success Response:
-json{
-  "status": 200,
-  "message": "Success message",
-  "data": { ... }
-}
-Error Response:
-json{
-  "status": 400,
-  "message": "Error message",
-  "errors": ["Error detail 1", "Error detail 2"]
-}
-Error Handling
-The API uses standard HTTP status codes:
-Status CodeDescription200Success201Created400Bad Request (validation error, insufficient balance)404Not Found (user or transaction doesn't exist)500Internal Server Error
+- Success Response:
+    json{
+        "status": 200,
+        "message": "Success message",
+        "data": { ... }
+    }
+
+- Error Response:
+    json{
+        "status": 400,
+        "message": "Error message",
+        "errors": ["Error detail 1", "Error detail 2"]
+    }
+# Error Handling - The API uses standard HTTP status codes:
+- 200 Success
+- 201 Created
+- 400 Bad Request (validation error, insufficient balance)
+- 404 Not Found (user or transaction doesn't exist)
+- 500 Internal Server Error
