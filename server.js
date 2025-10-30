@@ -1,5 +1,6 @@
 import express from 'express';
 // Import the routes file
+import userRouter from './routes/userRoutes.js';
 import transactionRouter from './routes/transactionRoutes.js';
 // Import the global error handler middleware
 import { errorHandler } from './middleware/errorHandler.js';
@@ -16,12 +17,22 @@ app.use(express.json());
 // -------------------------------------------------
 // 2. Test Route
 // -------------------------------------------------
+app.get('/', (req, res) => {
+   res.json({ 
+      message: 'Finance Tracker API is running',
+      version: '1.0.0'
+   });
+});
 
 // -------------------------------------------------
 // 3. Application Routes
-// Attach the imported transaction routes under the '/api/transactions' base path
 // -------------------------------------------------
+
+// Transactions API (e.g., /api/transactions/...)
 app.use('/api/transactions', transactionRouter);
+
+// Users API (e.g., /api/users/...) 
+app.use('/api/users', userRouter);
 
 
 // -------------------------------------------------
