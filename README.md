@@ -48,31 +48,29 @@ personal-finance-tracker/
 
 2. Installation
 
-Clone the repository (or download the ZIP)
+- Clone the repository (or download the ZIP)
+    `git clone https://github.com/yourusername/personal-finance-tracker.git`
+    `cd personal-finance-tracker`
 
-bashgit clone https://github.com/yourusername/personal-finance-tracker.git
-cd personal-finance-tracker
+- Install dependencies
+    `npm install`
 
-Install dependencies
+- Verify installation
+    `npm list`
 
-bashnpm install
-
-Verify installation
-
-bashnpm list
-Expected dependencies:
+- Expected dependencies:
 
 express
 nodemon (dev dependency)
 
 Running the Application
 Development mode (with auto-restart on file changes):
-bashnpm run dev
+npm run dev
 Production mode:
-bashnpm start
+npm start
 The server will start on http://localhost:3000
 Verify the server is running:
-bashcurl http://localhost:3000/health
+curl http://localhost:3000/health
 Expected response:
 json{
   "status": "OK",
@@ -101,3 +99,6 @@ json{
   "message": "Error message",
   "errors": ["Error detail 1", "Error detail 2"]
 }
+Error Handling
+The API uses standard HTTP status codes:
+Status CodeDescription200Success201Created400Bad Request (validation error, insufficient balance)404Not Found (user or transaction doesn't exist)500Internal Server Error
