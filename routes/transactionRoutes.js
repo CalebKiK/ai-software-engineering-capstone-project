@@ -77,7 +77,7 @@ router.get('/', (req, res) => {
 // -----------------------------------------------------------
 router.get('/user/:id', validateUserTransactionGet, (req, res) => {
     // NOTE: userId presence is guaranteed by validateTransactionGet middleware
-    const { id } = parseInt(req.params);
+    const { id } = req.params;
     const { type, description, category } = req.query;
 
     if (!users[id]) {

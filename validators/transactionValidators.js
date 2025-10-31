@@ -44,7 +44,7 @@ export const validateTransactionPost = (req, res, next) => {
  * @param {function} next - Express next middleware function
  */
 export const validateUserTransactionGet = (req, res, next) => {
-    const { id } = parseInt(req.params);
+    const { id } = req.params;
 
     if (!id) {
         return res.status(400).json({

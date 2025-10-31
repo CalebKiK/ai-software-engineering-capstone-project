@@ -72,7 +72,9 @@ finance-tracker-api/
 2. Installation
 
 - Clone the repository (or download the ZIP)
+
     `git clone https://github.com/yourusername/personal-finance-tracker.git`
+    
     `cd personal-finance-tracker`
 
 - Install dependencies
