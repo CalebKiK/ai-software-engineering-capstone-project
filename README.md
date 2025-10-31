@@ -25,22 +25,29 @@ A RESTful API built with Node.js and Express.js for managing personal finance tr
 finance-tracker-api/
 
 ├── data/
+
 │   └── storage.js          # In-memory data storage & business logic
 
 ├── middleware/
+
 │   └── errorHandler.js     # Custom error middleware
 
 ├── node_modules/           # Contains project dependencies
 
 ├── routes/
+
 │   ├── userRoutes.js       # User CRUD endpoints
+
 │   └── transactionRoutes.js # Transaction CRUD endpoints
 
 ├── utils/
+
 │   └── idGenerator.js           # Custom id generator utility
 
 ├── validators/
+
 │   └── transactionValidators.js      # transactions logic validators
+
 │   └── userValidators.js      # users logic validators
 
 ├── server.js               # Main application entry point
