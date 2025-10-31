@@ -1,10 +1,10 @@
-## Personal Finance Transaction Tracker API
+# Personal Finance Transaction Tracker API
 Developer Name: Caleb Karimi
 
-# Project Overview
+## Project Overview
 A RESTful API built with Node.js and Express.js for managing personal finance transactions. This API allows users to track deposits, withdrawals, and monitor their account balance.
 
-# Features
+## Features
 
 - User Management: Create and manage user accounts, Track user balance automatically, Retrieve user information
 
@@ -14,34 +14,44 @@ A RESTful API built with Node.js and Express.js for managing personal finance tr
 
 - Data Filtering: Filter transactions by user, Filter by transaction type (deposit/withdrawal), Filter by category
 
-# Tech Stack
+## Tech Stack
 - Runtime: Node.js (v14 or higher)
 - Framework: Express.js (v4.18+)
 - Language: JavaScript (ES6+ with ES Modules)
 - Storage: In-memory storage (JavaScript objects)
 - Development Tools: nodemon
 
-# Project Structure
+## Project Structure
 finance-tracker-api/
+
 ├── data/
 │   └── storage.js          # In-memory data storage & business logic
+
 ├── middleware/
 │   └── errorHandler.js     # Custom error middleware
+
 ├── node_modules/           # Contains project dependencies
+
 ├── routes/
 │   ├── userRoutes.js       # User CRUD endpoints
 │   └── transactionRoutes.js # Transaction CRUD endpoints
+
 ├── utils/
 │   └── idGenerator.js           # Custom id generator utility
+
 ├── validators/
 │   └── transactionValidators.js      # transactions logic validators
 │   └── userValidators.js      # users logic validators
+
 ├── server.js               # Main application entry point
+
 ├── package.json            # Project dependencies & scripts
+
 ├── .gitignore             # Git ignore file
+
 └── README.md              # Project documentation
 
-# Getting Started
+## Getting Started
 1. Prerequisites
 - Before you begin, ensure you have the following installed:
     Node.js (v14.0.0 or higher)
@@ -75,18 +85,19 @@ finance-tracker-api/
     `npm start`
 
 
-- The server will start on http://localhost:3000. Expected response to verify the server is running:
+- The server will start on http://localhost:3000. 
+- Expected response to verify the server is running:
     json{
         message: 'Finance Tracker API is running',
         version: '1.0.0'
     }
 
-# API Documentation
+## API Documentation
 
 ### Base URL
 - http://localhost:3000/api
 
-# Response Format
+## Response Format
 All API responses follow this structure:
 - Success Response:
     json{
@@ -101,7 +112,8 @@ All API responses follow this structure:
         "message": "Error message",
         "errors": ["Error detail 1", "Error detail 2"]
     }
-# Error Handling - The API uses standard HTTP status codes:
+## Error Handling
+The API uses standard HTTP status codes:
 - 200 Success
 - 201 Created
 - 400 Bad Request (validation error, insufficient balance)
