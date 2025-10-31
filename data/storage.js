@@ -12,6 +12,13 @@ export let users = {
     email: 'bob@example.com',
     balance: 500.00,   // ← NEW: Track user balance
     createdAt: new Date('2024-02-20')
+  },
+  '3': {
+    id: '3',
+    name: 'Calvin Klein',
+    email: 'calvin@example.com',
+    balance: 200.00,   // ← NEW: Track user balance
+    createdAt: new Date('2024-02-20')
   }
 };
 

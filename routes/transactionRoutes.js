@@ -1,16 +1,16 @@
 import express from 'express';
-import { users, transactions} from '../data/storage';
-import { validateTransactionPost, validateTransactionGet } from '../validators/transactionValidators.js';
-import { getNewId } from '../utils/idGenerator';
+import { users, transactions} from '../data/storage.js';
+import { validateTransactionPost, validateUserTransactionGet } from '../validators/transactionValidators.js';
+import { getNewId } from '../utils/idGenerator.js';
 
 const router = express.Router();
 
 // -----------------------------------------------------------
 // GET /transactions/balance - Get current user balance (Uses Query Validation)
 // -----------------------------------------------------------
-router.get('/balance', validateTransactionGet, (req, res) => {
+router.get('/balance/:id', validateUserTransactionGet, (req, res) => {
     // NOTE: userId presence is guaranteed by validateTransactionGet middleware
-    const { userId } = req.query;
+    const { userId } = req.params;
 
     const user = users[userId];
     if (!user) {
@@ -33,21 +33,62 @@ router.get('/balance', validateTransactionGet, (req, res) => {
 });
 
 // -----------------------------------------------------------
-// GET /transactions - Transaction History Endpoint (Uses Query Validation)
+// GET /transactions - Transaction History Endpoint of all users (Uses Query Validation)
 // -----------------------------------------------------------
-router.get('/', validateTransactionGet, (req, res) => {
+router.get('/', (req, res) => {
     // NOTE: userId presence is guaranteed by validateTransactionGet middleware
-    const { userId, type, description, category } = req.query;
+    const { type, description, category } = req.query;
 
-    if (!users[userId]) {
+    let resultsTransactions = Object.values(transactions);
+
+    if (type) {
+        resultsTransactions = resultsTransactions.filter(tx => tx.type === type);
+    };
+
+    if (description) {
+        // Using includes for partial matching
+        resultsTransactions = resultsTransactions.filter(tx => tx.description.toLowerCase().includes(description.toLowerCase()));
+    };
+
+    if (category) {
+        resultsTransactions = resultsTransactions.filter(tx => tx.category === category);
+    };
+
+    if (resultsTransactions.length === 0) {
+        // Using 200 OK since the request was valid, but no data matched the filter
+        return res.status(200).json({
+            status: 200,
+            message: 'No results found with the provided filters',
+            data: []
+        })
+    }
+
+    resultsTransactions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    return res.status(200).json({
+        status: 200,
+        message: 'Results found successfully',
+        data: resultsTransactions
+    })
+});
+
+// -----------------------------------------------------------
+// GET /transactions per user - Transaction History Endpoint for a user (Uses Query Validation)
+// -----------------------------------------------------------
+router.get('/user/:id', validateUserTransactionGet, (req, res) => {
+    // NOTE: userId presence is guaranteed by validateTransactionGet middleware
+    const { id } = parseInt(req.params);
+    const { type, description, category } = req.query;
+
+    if (!users[id]) {
         return res.status(404).json({
             status: 404,
-            message: `User with id ${userId} not found.`
+            message: `User with id ${id} not found.`
         })
     };
 
     let resultsTransactions = Object.values(transactions)
-        .filter(tx => tx.userId === userId);
+        .filter(tx => tx.userId === id);
 
     if (type) {
         resultsTransactions = resultsTransactions.filter(tx => tx.type === type);

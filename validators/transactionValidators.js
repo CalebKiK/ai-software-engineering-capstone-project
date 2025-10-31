@@ -43,13 +43,13 @@ export const validateTransactionPost = (req, res, next) => {
  * @param {object} res - Express response object
  * @param {function} next - Express next middleware function
  */
-export const validateTransactionGet = (req, res, next) => {
-    const { userId } = req.query;
+export const validateUserTransactionGet = (req, res, next) => {
+    const { id } = parseInt(req.params);
 
-    if (!userId) {
+    if (!id) {
         return res.status(400).json({
             status: 400,
-            message: "UserId is required to find transactions."
+            message: "UserId is required to find transactions of user."
         });
     }
 
